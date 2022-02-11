@@ -1,12 +1,15 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "Converting file to csv to parquet using aws glue"
 Parameters:
+  CrawlerName:
+    Type: String
+    Default: crawler-test-11
   DatabaseName:
     Type: String
-    Default: cfn-database-flights-1
+    Default: cfn-database-test-1
   InputTableName1:
     Type: String
-    Default: cfn-manual-table-flights-1
+    Default: cfn-manual-table-test-1
   DataBucketName:
     Type: String
     Description: "Name of the S3 bucket in which the Csv file  will be uploaded."
@@ -35,16 +38,20 @@ Resources:
                     - "s3:PutObject"
                     - "s3:ListBucket"
                     - "s3:DeleteObject"
-  Database:
+                  Resource:
+                    - !Sub "arn:aws:s3:::${DataBucketName}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+  DataBase:
     Type: "AWS::Glue::Database"
     Properties:
       CatalogId: !Ref AWS::AccountId
       DatabaseInput:
           Name: !Ref DatabaseName
           Description: "Database to hold tables for flights data"
-  TableFlights:
+  Table1:
 # Creating the table waits for the database to be created
-    DependsOn: Database
+    DependsOn: DataBase
     Type: AWS::Glue::Table
     Properties:
       CatalogId: !Ref AWS::AccountId
@@ -57,4 +64,14 @@ Resources:
         "classification": "csv"
         }
 
-
+  GlueCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: !Ref CrawlerName
+      Role: !GetAtt AwsGlueJobRole.Arn
+      Description: AWS Glue crawler to crawl File data
+      DatabaseName: !Ref DatabaseName
+      Targets:
+        S3Targets:
+          - Path: "s3://crawler-public-us-east-1/flight/2016/csv"
+      TablePrefix: !Ref InputTableName1

@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Converting file to csv to parquet using aws glue"
+Parameters:
+  DatabaseName:
+    Type: String
+    Default: cfn-database-flights-1
+  InputTableName1:
+    Type: String
+    Default: cfn-manual-table-flights-1
+  DataBucketName:
+    Type: String
+    Description: "Name of the S3 bucket in which the Csv file  will be uploaded."
+
+Resources:
+  AwsGlueJobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "glue.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        PolicyName: root
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+                - Effect: Allow
+                  Action:
+                    - "s3:GetObject"
+                    - "s3:PutObject"
+                    - "s3:ListBucket"
+                    - "s3:DeleteObject"
+  Database:
+    Type: "AWS::Glue::Database"
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+          Name: !Ref DatabaseName
+          Description: "Database to hold tables for flights data"
+  TableFlights:
+# Creating the table waits for the database to be created
+    DependsOn: Database
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref DatabaseName
+      TableInput:
+        Name: !Ref InputTableName1
+        Description: "Define the first few columns of the flights table"
+        TableType: EXTERNAL_TABLE
+        Parameters: {
+        "classification": "csv"
+        }
+
+

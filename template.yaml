@@ -6,13 +6,16 @@ Parameters:
     Default: crawler-test-11
   DatabaseName:
     Type: String
-    Default: cfn-database-test-1
+    Default: database-test-1
   InputTableName1:
     Type: String
     Default: cfn-manual-table-test-1
   DataBucketName:
     Type: String
     Description: "Name of the S3 bucket in which the Csv file  will be uploaded."
+  JobName:
+    Type: String
+    Default: job-S3-to-S3-2
 
 Resources:
   AwsGlueJobRole:
@@ -48,9 +51,9 @@ Resources:
       CatalogId: !Ref AWS::AccountId
       DatabaseInput:
           Name: !Ref DatabaseName
-          Description: "Database to hold tables for flights data"
+          Description: "Database to hold tables for data"
   Table1:
-# Creating the table waits for the database to be created
+
     DependsOn: DataBase
     Type: AWS::Glue::Table
     Properties:
@@ -75,6 +78,12 @@ Resources:
         S3Targets:
           - Path: "s3://crawler-public-us-east-1/flight/2016/csv"
       TablePrefix: !Ref InputTableName1
-      SchemaChangePolicy:
-        UpdateBehavior: "UPDATE_IN_DATABASE"
-        DeleteBehavior: "LOG"
+
+  EtLJob1:
+    Type: AWS::Glue::Job
+    Properties:
+      Role: !Ref AwsGlueJobRole
+      Name: !Ref JobName
+      Command:
+        Name: gluet1
+        ScriptLocation: s3://aws-glue-scripts-123456789012-ap-south-1/Write/sal-job-test2

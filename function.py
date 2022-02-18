@@ -1,5 +1,4 @@
 import boto3
-import os
 from botocore.exceptions import ClientError
 
 
@@ -27,15 +26,15 @@ def create_folder(bucket_name):
         print(e)
 
 
-def upload_file(file_name, path, object_name=None):
-    if object_name is None:
-        object_name = os.path.basename(file_name)
-        s3_client = boto3.client('s3')
-        try:
-            s3_client.upload_file(path, object_name)
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'FileNotFoundError':
-                print("File was not found")
-            else:
-                print(e)
+def upload_file(filename, bucket_name):
+    try:
+        s3_client = boto3.client("s3")
+        s3_client.upload_file(Filename=filename, Bucket=bucket_name, Key="Read/data.csv")
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'FileNotFoundError':
+            print("File was not found")
+        else:
+            raise
+
+
 
